@@ -4,17 +4,33 @@ import { fileStore } from './fileStore.js';
 
 export const state = { driver: 'file' };
 
+const isProd = config.env === 'production';
+
+/**
+ * Connects to MongoDB. In development an unreachable database falls back to the
+ * JSON file store so the site still runs; in production that fallback would be an
+ * ephemeral, data-losing surprise, so startup fails loudly instead.
+ */
 export async function connectDatabase() {
   if (!config.mongoUri) {
-    console.warn('[db] MONGODB_URI empty -> using JSON file store');
+    if (isProd) {
+      console.error('[db] MONGODB_URI is required in production. Set it to your MongoDB connection string.');
+      process.exit(1);
+    }
+    console.warn('[db] MONGODB_URI empty -> using JSON file store (development only)');
     return state.driver;
   }
   try {
     mongoose.set('strictQuery', true);
-    await mongoose.connect(config.mongoUri, { serverSelectionTimeoutMS: 2500 });
+    await mongoose.connect(config.mongoUri, { serverSelectionTimeoutMS: isProd ? 10000 : 2500 });
     state.driver = 'mongo';
     console.log('[db] connected to MongoDB');
   } catch (err) {
+    if (isProd) {
+      console.error(`[db] cannot reach MongoDB: ${err.message}`);
+      console.error('[db] refusing to start on the file store in production — check MONGODB_URI and the Atlas IP allowlist.');
+      process.exit(1);
+    }
     state.driver = 'file';
     console.warn(`[db] MongoDB unavailable (${err.message}) -> using JSON file store`);
   }

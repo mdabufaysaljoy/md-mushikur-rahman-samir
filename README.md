@@ -75,10 +75,16 @@ argon-grade bcrypt hashing (cost 12), server-side validation on every write, ima
 
 ## Deploy
 
+**Render + MongoDB Atlas (free):** step-by-step in [DEPLOYMENT.md](DEPLOYMENT.md). The repo ships a
+`render.yaml` blueprint and a multi-stage `Dockerfile`; push to `main` redeploys.
+
+**Locally or on a VPS:**
+
 ```bash
 docker compose up -d --build     # app + MongoDB, site on :5050
 ```
 
 Or build manually: `npm run build` then `npm start` (the API serves `client/dist` and falls back to `index.html`
 for client-side routes). Behind Nginx, proxy `/` to `:5050`. Set `JWT_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`,
-`MONGODB_URI` and `CLIENT_ORIGIN` as environment variables in production.
+`MONGODB_URI` and `CLIENT_ORIGIN` as environment variables in production — in production the API refuses to
+start without a reachable `MONGODB_URI` rather than falling back to the file store.
