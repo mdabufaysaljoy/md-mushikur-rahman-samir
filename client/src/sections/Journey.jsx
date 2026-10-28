@@ -18,7 +18,7 @@ export default function Journey({ experience = [] }) {
           </h2>
         </Reveal>
 
-        <div ref={ref} className="relative mt-14 ps-8 sm:ps-12">
+        <div ref={ref} className="relative mt-10 ps-7 sm:mt-14 sm:ps-12">
           <div className="absolute inset-y-0 start-[11px] w-px bg-white/10 sm:start-[19px]" />
           <motion.div
             style={{ scaleY: line }}
@@ -31,16 +31,16 @@ export default function Journey({ experience = [] }) {
               return (
                 <motion.div
                   key={item._id || `${item.role}-${i}`}
-                  initial={{ opacity: 0, x: 24 }}
-                  whileInView={{ opacity: 1, x: 0 }}
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: '-80px' }}
                   transition={{ duration: 0.6, delay: i * 0.06 }}
                   className="relative"
                 >
-                  <span className="absolute -start-8 top-5 grid h-6 w-6 place-items-center rounded-full border border-white/15 bg-ink-900 text-neon-400 sm:-start-12 sm:h-8 sm:w-8">
+                  <span className="absolute -start-7 top-5 grid h-6 w-6 place-items-center rounded-full border border-white/15 bg-ink-900 text-neon-400 sm:-start-12 sm:h-8 sm:w-8">
                     <Icon size={13} />
                   </span>
-                  <div className="glass card-hover p-6">
+                  <div className="glass card-hover p-5 sm:p-6">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
                         <h3 className="text-lg font-semibold text-white">{item.role}</h3>

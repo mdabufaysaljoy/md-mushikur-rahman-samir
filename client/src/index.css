@@ -10,6 +10,9 @@
 @layer base {
   * { @apply border-white/5; }
   html { scroll-behavior: smooth; }
+  /* entrance animations slide elements in from the sides; clip keeps that from
+     creating a horizontal scrollbar without turning the body into a scroll container */
+  html, body { overflow-x: clip; }
   body {
     background:
       radial-gradient(900px 600px at 12% -10%, rgba(99, 102, 241, 0.18), transparent 60%),
@@ -26,10 +29,12 @@
     border: 3px solid #05060f;
   }
   h1, h2, h3 { @apply font-semibold tracking-tight; }
+  /* the header is fixed, so anchor jumps need room above the heading */
+  section[id], [id^='project-'] { scroll-margin-top: 6rem; }
 }
 
 @layer components {
-  .container-x { @apply mx-auto w-full max-w-7xl px-5 sm:px-8; }
+  .container-x { @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8; }
   .glass {
     @apply rounded-3xl border border-white/10 bg-white/[0.035] backdrop-blur-xl;
     box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.06) inset, 0 30px 80px -40px rgba(0, 0, 0, 0.9);
@@ -44,7 +49,7 @@
     color: transparent;
   }
   .btn {
-    @apply relative inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all duration-300 disabled:opacity-50;
+    @apply relative inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-300 disabled:opacity-50 sm:px-6 sm:py-3;
   }
   .btn-primary {
     @apply btn text-white;
@@ -53,9 +58,9 @@
   }
   .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 18px 50px -12px color-mix(in srgb, var(--accent) 70%, transparent); }
   .btn-ghost { @apply btn border border-white/15 bg-white/5 text-slate-200 hover:border-white/30 hover:bg-white/10; }
-  .section { @apply relative py-24 sm:py-32; }
+  .section { @apply relative py-20 sm:py-24 lg:py-32; }
   .label-eyebrow {
-    @apply mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-medium uppercase tracking-[0.25em] text-slate-400;
+    @apply mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.18em] text-slate-400 sm:px-4 sm:text-xs sm:tracking-[0.25em];
   }
   .input {
     @apply w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-slate-100 outline-none transition

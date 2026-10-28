@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, lazy, Suspense } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowDown, Download, Sparkles, MapPin, MousePointerClick } from 'lucide-react';
 import Magnetic from '../components/Magnetic.jsx';
@@ -39,8 +39,9 @@ function RoleRotator({ roles = [] }) {
 
 /** Read-out under the orb: idle hint, or the skill the visitor is pointing at. */
 function OrbReadout({ node, count }) {
+  const coarse = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
   return (
-    <div className="glass relative mx-auto mt-4 max-w-sm overflow-hidden px-5 py-4">
+    <div className="glass relative mx-auto mt-3 max-w-sm overflow-hidden px-4 py-3.5 sm:mt-4 sm:px-5 sm:py-4">
       <AnimatePresence mode="wait">
         {node ? (
           <motion.div
@@ -62,13 +63,15 @@ function OrbReadout({ node, count }) {
                 transition={{ duration: 0.5, ease: 'easeOut' }}
               />
             </div>
-            <p className="mt-2 text-[11px] text-slate-500">Click the node to jump to the full stack.</p>
+            <p className="mt-2 text-[11px] text-slate-500">
+              {coarse ? 'Tap again' : 'Click the node'} to jump to the full stack.
+            </p>
           </motion.div>
         ) : (
           <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <p className="flex items-center gap-2 text-sm text-slate-300">
               <MousePointerClick size={15} className="text-neon-400" />
-              Drag the orb — hover a node
+              Drag the orb — {coarse ? 'tap' : 'hover'} a node
             </p>
             <p className="mt-1.5 text-[11px] leading-relaxed text-slate-500">
               {count} technologies orbiting live from the CMS. Every label, colour and the portrait itself is editable in the admin panel.
@@ -99,22 +102,31 @@ export default function Hero({ profile, settings, skills = [], techs = [] }) {
     return source.map((s) => ({ name: s.name, group: s.group || 'Stack', level: s.level || 70 }));
   }, [skills]);
 
-  const select = useCallback(() => {
+  // On a touch screen the first tap reveals the read-out, the second follows through
+  // to the skills section — a single tap would scroll away before anything was read.
+  const tapped = useRef(null);
+  const select = useCallback((node) => {
+    const coarse = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+    if (coarse && tapped.current !== node?.name) {
+      tapped.current = node?.name;
+      setActive(node);
+      return;
+    }
     document.querySelector('#skills')?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
   return (
-    <section id="top" className="relative min-h-[100svh] overflow-hidden pt-28">
+    <section id="top" className="relative min-h-[100svh] overflow-hidden pt-24 sm:pt-28">
       <div aria-hidden className="absolute inset-0 grid-lines opacity-70" />
       <div
         aria-hidden
-        className="pointer-events-none absolute end-0 top-1/4 h-[36rem] w-[36rem] rounded-full opacity-25 blur-[120px]"
+        className="pointer-events-none absolute end-0 top-1/4 hidden h-[36rem] w-[36rem] rounded-full opacity-25 blur-[120px] sm:block"
         style={{ background: `radial-gradient(circle, ${accent} 0%, transparent 65%)` }}
       />
       <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-ink-950 to-transparent" />
 
-      <div className="container-x relative z-10 flex min-h-[calc(100svh-7rem)] flex-col justify-center">
-        <div className="grid items-center gap-10 lg:grid-cols-[1.05fr,0.95fr] lg:gap-8">
+      <div className="container-x relative z-10 flex min-h-[calc(100svh-6rem)] flex-col justify-center py-8">
+        <div className="grid items-center gap-8 sm:gap-10 lg:grid-cols-[1.05fr,1.1fr] lg:gap-6">
           <motion.div
             initial={{ opacity: 0, y: 28 }}
             animate={{ opacity: 1, y: 0 }}
@@ -125,19 +137,21 @@ export default function Hero({ profile, settings, skills = [], techs = [] }) {
               {profile?.availability || 'Available for work'}
             </span>
 
-            <h1 className="text-[2.6rem] font-semibold leading-[1.05] sm:text-6xl lg:text-[4.1rem]">
+            <h1 className="text-[2rem] font-semibold leading-[1.08] [text-wrap:balance] min-[420px]:text-[2.4rem] sm:text-5xl md:text-6xl lg:text-[3rem] xl:text-[3.6rem] 2xl:text-[4rem]">
               <span className="block text-slate-400">Hi, I'm</span>
               <span className="gradient-text block">{profile?.name || 'Md Abu Faysal Joy'}</span>
             </h1>
 
-            <div className="mt-4 flex min-h-[2rem] items-center gap-3">
-              <span className="h-px w-10 bg-gradient-to-r from-brand-500 to-transparent" />
+            <div className="mt-4 flex min-h-[2rem] items-center gap-2 sm:gap-3">
+              <span className="hidden h-px w-10 bg-gradient-to-r from-brand-500 to-transparent sm:block" />
               <RoleRotator roles={profile?.roles?.length ? profile.roles : ['Full-Stack Developer']} />
             </div>
 
-            <p className="mt-7 max-w-2xl text-base leading-relaxed text-slate-400 sm:text-lg">{profile?.summary}</p>
+            <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-slate-400 sm:mt-7 sm:text-base lg:text-lg">
+              {profile?.summary}
+            </p>
 
-            <div className="mt-9 flex flex-wrap items-center gap-3">
+            <div className="mt-7 flex flex-wrap items-center gap-2.5 sm:mt-9 sm:gap-3">
               <Magnetic>
                 <a href="#work" className="btn-primary">
                   View featured work <ArrowDown size={16} />
@@ -154,7 +168,7 @@ export default function Hero({ profile, settings, skills = [], techs = [] }) {
             </div>
 
             {profile?.location && (
-              <p className="mt-7 inline-flex items-center gap-2 text-sm text-slate-500">
+              <p className="mt-6 inline-flex items-center gap-2 text-sm text-slate-500 sm:mt-7">
                 <MapPin size={14} /> {profile.location}
               </p>
             )}
@@ -164,7 +178,7 @@ export default function Hero({ profile, settings, skills = [], techs = [] }) {
             initial={{ opacity: 0, scale: 0.92 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1.1, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-            className="relative"
+            className="relative lg:-me-4 xl:-me-10"
           >
             <Suspense
               fallback={
@@ -180,23 +194,23 @@ export default function Hero({ profile, settings, skills = [], techs = [] }) {
                 nodes={nodes}
                 onActive={setActive}
                 onSelect={select}
-                className="h-[25rem] w-full sm:h-[28rem] lg:h-[34rem]"
+                className="h-[23rem] w-full min-[420px]:h-[25rem] sm:h-[28rem] lg:h-[34rem]"
               />
             </Suspense>
             <OrbReadout node={active} count={skills.length || nodes.length} />
           </motion.div>
         </div>
 
-        <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="mt-10 grid grid-cols-2 gap-3 sm:mt-12 sm:gap-4 md:grid-cols-4">
           {(profile?.stats || []).map((s, i) => (
             <motion.div
               key={s.label}
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 + i * 0.08, duration: 0.6 }}
-              className="glass px-4 py-4"
+              className="glass px-4 py-3.5 sm:py-4"
             >
-              <p className="text-2xl font-semibold text-white">
+              <p className="text-xl font-semibold text-white sm:text-2xl">
                 {s.value}
                 <span className="text-neon-400">{s.suffix}</span>
               </p>
@@ -206,7 +220,7 @@ export default function Hero({ profile, settings, skills = [], techs = [] }) {
         </div>
       </div>
 
-      <div className="relative z-10 pb-10 pt-10">
+      <div className="relative z-10 pb-8 pt-8 sm:pb-10 sm:pt-10">
         <Marquee items={techs} />
       </div>
     </section>

@@ -3,8 +3,8 @@ import { motion } from 'framer-motion';
 const variants = {
   up: { y: 36, opacity: 0 },
   down: { y: -36, opacity: 0 },
-  left: { x: 46, opacity: 0 },
-  right: { x: -46, opacity: 0 },
+  left: { x: 32, opacity: 0 },
+  right: { x: -32, opacity: 0 },
   scale: { scale: 0.92, opacity: 0 },
 };
 

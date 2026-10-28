@@ -4,10 +4,51 @@ import { Billboard, Html, Points, PointMaterial, Ring, Torus, useTexture } from 
 import * as THREE from 'three';
 
 const RINGS = [
-  { radius: 2.9, tilt: [1.18, 0, 0.34], speed: 0.19, color: 'accent' },
-  { radius: 3.85, tilt: [1.02, 0.55, -0.22], speed: -0.14, color: 'brand' },
-  { radius: 4.7, tilt: [1.35, -0.4, 0.12], speed: 0.1, color: 'accent' },
+  { tilt: [1.18, 0, 0.34], speed: 0.19, color: 'accent' },
+  { tilt: [1.02, 0.55, -0.22], speed: -0.14, color: 'brand' },
+  { tilt: [1.35, -0.4, 0.12], speed: 0.1, color: 'accent' },
 ];
+
+const CORE_RADIUS = 1.18;
+const HALF_FOV = Math.tan(THREE.MathUtils.degToRad(45) / 2); // camera fov is 45
+
+/**
+ * The rig is solved from the canvas size: pick how big the portrait should be, then
+ * derive the orbit radii and camera distance that make it come out that size with the
+ * labels still in frame. A phone gets a large portrait with a tight, label-free orbit;
+ * a wide canvas gets the full labelled constellation.
+ */
+function useLayout() {
+  const { size } = useThree();
+  return useMemo(() => {
+    const w = Math.max(1, size.width);
+    const h = Math.max(1, size.height);
+    const aspect = w / h;
+
+    const labels = w >= 430;
+    const labelHalf = labels ? 72 : 10; // widest a label chip can get, in px
+
+    // How big the face should read on this canvas.
+    const targetPx = THREE.MathUtils.clamp(0.4 * Math.min(w, h), 120, 230);
+
+    // Outer orbit that produces that portrait size once everything is framed.
+    const outer = THREE.MathUtils.clamp((CORE_RADIUS * (w - 2 * labelHalf)) / targetPx - 0.5, 2.25, 5.2);
+    const ratios = outer >= 3.8 ? [0.62, 0.81, 1] : outer >= 2.6 ? [0.78, 1] : [0.84, 1];
+    const radii = ratios.map((r) => r * outer);
+    const maxNodes = radii.length * (labels ? 4 : 3);
+
+    // Camera distance converges in a few passes: label width is in pixels, and how many
+    // world units that spans depends on the distance we are solving for.
+    let z = (outer + 1.5) / (HALF_FOV * aspect);
+    for (let i = 0; i < 4; i += 1) {
+      const pxPerUnit = h / (2 * HALF_FOV * z);
+      const pad = labels ? 0.45 + labelHalf / pxPerUnit : 0.35;
+      z = Math.max((outer + pad) / (HALF_FOV * aspect), (outer * 0.85 + pad * 0.6) / HALF_FOV, 5);
+    }
+
+    return { z, coreScale: 1, radii, labels, maxNodes };
+  }, [size.width, size.height]);
+}
 
 /* ------------------------------ avatar core ------------------------------ */
 
@@ -20,7 +61,7 @@ function AvatarDisc({ url, accent }) {
   return (
     <>
       <mesh>
-        <circleGeometry args={[1.18, 72]} />
+        <circleGeometry args={[CORE_RADIUS, 72]} />
         <meshBasicMaterial map={texture} toneMapped={false} />
       </mesh>
       <mesh position={[0, 0, -0.02]}>
@@ -48,7 +89,7 @@ class AvatarBoundary extends Component {
 function FallbackDisc({ brand, accent }) {
   return (
     <mesh>
-      <circleGeometry args={[1.18, 72]} />
+      <circleGeometry args={[CORE_RADIUS, 72]} />
       <meshBasicMaterial color={brand} toneMapped={false} />
       <mesh position={[0, 0, 0.01]}>
         <ringGeometry args={[0.9, 1.18, 72]} />
@@ -58,7 +99,7 @@ function FallbackDisc({ brand, accent }) {
   );
 }
 
-function Core({ avatar, brand, accent, active }) {
+function Core({ avatar, brand, accent, active, scale = 1 }) {
   const group = useRef();
   const halo = useRef();
   const arc = useRef();
@@ -76,7 +117,7 @@ function Core({ avatar, brand, accent, active }) {
   const fallback = <FallbackDisc brand={brand} accent={accent} />;
 
   return (
-    <group ref={group}>
+    <group ref={group} scale={scale}>
       <Billboard>
         <AvatarBoundary fallback={fallback}>
           <Suspense fallback={fallback}>{avatar ? <AvatarDisc url={avatar} accent={accent} /> : fallback}</Suspense>
@@ -105,7 +146,7 @@ function Core({ avatar, brand, accent, active }) {
 
 /* -------------------------------- nodes ---------------------------------- */
 
-function SkillNode({ node, position, color, active, onHover, onSelect }) {
+function SkillNode({ node, position, color, active, labels, onHover, onSelect }) {
   const anchor = useRef();
   const mesh = useRef();
   const label = useRef();
@@ -113,7 +154,7 @@ function SkillNode({ node, position, color, active, onHover, onSelect }) {
   const world = useMemo(() => new THREE.Vector3(), []);
 
   // Label sits just outside the node, along the ring's radius, so it never lands on the portrait.
-  const labelOffset = useMemo(() => new THREE.Vector3(...position).normalize().multiplyScalar(0.5).toArray(), [position]);
+  const labelOffset = useMemo(() => new THREE.Vector3(...position).normalize().multiplyScalar(0.75).toArray(), [position]);
 
   useFrame(({ camera }, delta) => {
     if (!mesh.current) return;
@@ -128,7 +169,10 @@ function SkillNode({ node, position, color, active, onHover, onSelect }) {
     if (anchor.current && label.current) {
       anchor.current.getWorldPosition(world);
       const behind = world.distanceTo(camera.position) > camera.position.length();
-      label.current.style.opacity = active ? '1' : behind ? '0.22' : '0.92';
+      // ...and anything that drifts across the portrait fades too, so the face stays clear.
+      const ndc = world.project(camera);
+      const overCore = THREE.MathUtils.smoothstep(Math.hypot(ndc.x, ndc.y), 0.12, 0.38);
+      label.current.style.opacity = active ? '1' : String((behind ? 0.22 : 0.92) * overCore);
     }
   });
 
@@ -152,7 +196,10 @@ function SkillNode({ node, position, color, active, onHover, onSelect }) {
           e.stopPropagation();
           onHover(node);
         }}
-        onPointerOut={() => onHover(null)}
+        onPointerOut={(e) => {
+          // a tap ends with a pointerout; on touch the read-out should stay put instead
+          if (e.pointerType !== 'touch') onHover(null);
+        }}
         onClick={(e) => {
           e.stopPropagation();
           onSelect(node);
@@ -167,10 +214,11 @@ function SkillNode({ node, position, color, active, onHover, onSelect }) {
         <meshStandardMaterial color={color} emissive={color} emissiveIntensity={active ? 2.4 : 0.9} metalness={0.6} roughness={0.25} />
       </mesh>
 
-      <Html center position={labelOffset} distanceFactor={11} zIndexRange={[20, 0]} style={{ pointerEvents: 'none' }}>
+      {labels && (
+      <Html center position={labelOffset} zIndexRange={[20, 0]} style={{ pointerEvents: 'none' }}>
         <span
           ref={label}
-          className={`block max-w-[11rem] truncate rounded-full border px-2.5 py-1 font-mono text-[11px] tracking-wide transition-colors duration-200 ${
+          className={`block max-w-[9rem] truncate rounded-full border px-2 py-0.5 font-mono text-[10px] tracking-wide transition-colors duration-200 ${
             active
               ? 'border-white/40 bg-ink-950/95 text-white shadow-[0_0_24px_rgba(34,211,238,0.35)]'
               : 'border-white/10 bg-ink-950/70 text-slate-400'
@@ -179,11 +227,12 @@ function SkillNode({ node, position, color, active, onHover, onSelect }) {
           {node.name}
         </span>
       </Html>
+      )}
     </group>
   );
 }
 
-function OrbitRing({ ring, nodes, brand, accent, activeName, onHover, onSelect, paused }) {
+function OrbitRing({ ring, radius, nodes, brand, accent, activeName, labels, onHover, onSelect, paused }) {
   const spin = useRef();
   const color = ring.color === 'brand' ? brand : accent;
 
@@ -195,14 +244,14 @@ function OrbitRing({ ring, nodes, brand, accent, activeName, onHover, onSelect, 
     () =>
       nodes.map((node, i) => {
         const angle = (i / Math.max(1, nodes.length)) * Math.PI * 2;
-        return { node, position: [Math.cos(angle) * ring.radius, Math.sin(angle) * ring.radius, 0] };
+        return { node, position: [Math.cos(angle) * radius, Math.sin(angle) * radius, 0] };
       }),
-    [nodes, ring.radius]
+    [nodes, radius]
   );
 
   return (
     <group rotation={ring.tilt}>
-      <Torus args={[ring.radius, 0.004, 8, 160]}>
+      <Torus args={[radius, 0.004, 8, 160]}>
         <meshBasicMaterial color={color} transparent opacity={activeName ? 0.5 : 0.28} />
       </Torus>
       <group ref={spin}>
@@ -213,6 +262,7 @@ function OrbitRing({ ring, nodes, brand, accent, activeName, onHover, onSelect, 
             position={position}
             color={color}
             active={activeName === node.name}
+            labels={labels}
             onHover={onHover}
             onSelect={onSelect}
           />
@@ -327,11 +377,9 @@ function Constellation({ children, reduced, onDragChange }) {
   return <group ref={group}>{children}</group>;
 }
 
-function PointerCamera({ enabled }) {
-  const { camera, pointer, size } = useThree();
+function PointerCamera({ enabled, z }) {
+  const { camera, pointer } = useThree();
   const target = useMemo(() => new THREE.Vector3(0, 0, 0), []);
-  // Dollying back on narrow canvases keeps the outer ring — and its labels — in frame.
-  const z = 11.2 * THREE.MathUtils.clamp(600 / Math.max(1, size.width), 1, 1.22);
   useFrame(() => {
     const k = enabled ? 1 : 0;
     camera.position.x += (pointer.x * 0.9 * k - camera.position.x) * 0.04;
@@ -343,6 +391,48 @@ function PointerCamera({ enabled }) {
 }
 
 /* --------------------------------- scene --------------------------------- */
+
+function Scene({ avatar, brand, accent, nodes, active, reduced, onHover, onSelect, onDragChange, dragging }) {
+  const { z, coreScale, radii, labels, maxNodes } = useLayout();
+
+  const rings = useMemo(() => {
+    const buckets = radii.map(() => []);
+    nodes.slice(0, maxNodes).forEach((n, i) => buckets[i % radii.length].push(n));
+    return radii
+      .map((radius, i) => ({ ring: RINGS[i], radius, nodes: buckets[i] }))
+      .filter((r) => r.nodes.length);
+  }, [nodes, radii, maxNodes]);
+
+  return (
+    <>
+      <ambientLight intensity={0.8} />
+      <pointLight position={[6, 5, 6]} intensity={70} color={accent} />
+      <pointLight position={[-7, -4, -4]} intensity={70} color={brand} />
+
+      <Constellation reduced={reduced} onDragChange={onDragChange}>
+        <Core avatar={avatar} brand={brand} accent={accent} active={!!active} scale={coreScale} />
+        {rings.map(({ ring, radius, nodes: ringNodes }, i) => (
+          <OrbitRing
+            key={i}
+            ring={ring}
+            radius={radius}
+            nodes={ringNodes}
+            brand={brand}
+            accent={accent}
+            activeName={active?.name}
+            labels={labels}
+            onHover={onHover}
+            onSelect={onSelect}
+            paused={!!active || reduced}
+          />
+        ))}
+      </Constellation>
+
+      <Dust color={accent} />
+      <PointerCamera enabled={!dragging} z={z} />
+    </>
+  );
+}
 
 export default function HeroScene({
   avatar,
@@ -357,18 +447,6 @@ export default function HeroScene({
   const [dragging, setDragging] = useState(false);
   const reduced = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  const compact = typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches;
-
-  const rings = useMemo(() => {
-    const list = compact ? nodes.slice(0, 6) : nodes;
-    const buckets = RINGS.map(() => []);
-    list.forEach((n, i) => buckets[i % RINGS.length].push(n));
-    const scale = compact ? 0.72 : 1;
-    return RINGS.map((ring, i) => ({ ring: { ...ring, radius: ring.radius * scale }, nodes: buckets[i] })).filter(
-      (r) => r.nodes.length
-    );
-  }, [nodes, compact]);
-
   const hover = (node) => {
     setActive(node);
     onActive?.(node);
@@ -381,31 +459,21 @@ export default function HeroScene({
         camera={{ position: [0, 0, 11.2], fov: 45 }}
         gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
         frameloop={reduced ? 'demand' : 'always'}
+        onPointerMissed={() => hover(null)}
       >
         <Suspense fallback={null}>
-          <ambientLight intensity={0.8} />
-          <pointLight position={[6, 5, 6]} intensity={70} color={accent} />
-          <pointLight position={[-7, -4, -4]} intensity={70} color={brand} />
-
-          <Constellation reduced={reduced} onDragChange={setDragging}>
-            <Core avatar={avatar} brand={brand} accent={accent} active={!!active} />
-            {rings.map(({ ring, nodes: ringNodes }, i) => (
-              <OrbitRing
-                key={i}
-                ring={ring}
-                nodes={ringNodes}
-                brand={brand}
-                accent={accent}
-                activeName={active?.name}
-                onHover={hover}
-                onSelect={(n) => onSelect?.(n)}
-                paused={!!active || reduced}
-              />
-            ))}
-          </Constellation>
-
-          <Dust color={accent} />
-          <PointerCamera enabled={!dragging} />
+          <Scene
+            avatar={avatar}
+            brand={brand}
+            accent={accent}
+            nodes={nodes}
+            active={active}
+            reduced={reduced}
+            dragging={dragging}
+            onHover={hover}
+            onSelect={(n) => onSelect?.(n)}
+            onDragChange={setDragging}
+          />
         </Suspense>
       </Canvas>
     </div>
