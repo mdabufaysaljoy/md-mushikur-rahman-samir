@@ -43,6 +43,8 @@ export const settings = {
   key: 'site',
   siteTitle: 'Faysal Joy — Full-Stack Engineer',
   tagline: 'Interfaces that feel alive. Backends that never flinch.',
+  logoUrl: '',
+  faviconUrl: '',
   primaryColor: '#6366f1',
   accentColor: '#22d3ee',
   heroMode: 'particles',

@@ -1,4 +1,6 @@
-import { Plus, Trash2, GripVertical } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { Plus, Trash2, GripVertical, Upload, ImageOff } from 'lucide-react';
+import { api } from '../lib/api.js';
 
 const base = 'w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-brand-500/70 focus:ring-2 focus:ring-brand-500/20 placeholder:text-slate-600';
 
@@ -39,6 +41,8 @@ export function Field({ field, value, onChange }) {
             ))}
           </select>
         );
+      case 'image':
+        return <ImageField value={value} onChange={set} placeholder={placeholder} round={field.round} />;
       case 'list':
         return <ListField value={value} onChange={set} placeholder={placeholder} />;
       case 'objectList':
@@ -54,6 +58,78 @@ export function Field({ field, value, onChange }) {
       {control()}
       {help && <span className="mt-1 block text-xs text-slate-600">{help}</span>}
     </label>
+  );
+}
+
+/** URL input + direct upload + live preview. Works for avatars, logos and favicons. */
+function ImageField({ value, onChange, placeholder, round }) {
+  const inputRef = useRef(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [broken, setBroken] = useState(false);
+
+  const pick = async (file) => {
+    if (!file) return;
+    setBusy(true);
+    setError('');
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      const data = await api('/uploads', { method: 'POST', body: form, auth: true, raw: true });
+      setBroken(false);
+      onChange(data.url);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-3">
+        <span
+          className={`grid h-12 w-12 shrink-0 place-items-center overflow-hidden border border-white/10 bg-white/[0.04] ${
+            round ? 'rounded-full' : 'rounded-lg'
+          }`}
+        >
+          {value && !broken ? (
+            <img src={value} alt="" className="h-full w-full object-cover" onError={() => setBroken(true)} onLoad={() => setBroken(false)} />
+          ) : (
+            <ImageOff size={16} className="text-slate-600" />
+          )}
+        </span>
+        <input
+          className={base}
+          value={value || ''}
+          placeholder={placeholder || 'https://… or upload'}
+          onChange={(e) => {
+            setBroken(false);
+            onChange(e.target.value);
+          }}
+        />
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2.5 text-xs text-slate-300 hover:border-brand-500/50 hover:text-white"
+        >
+          <Upload size={13} /> {busy ? 'Uploading…' : 'Upload'}
+        </button>
+        {value && (
+          <button
+            type="button"
+            onClick={() => onChange('')}
+            className="shrink-0 rounded-lg border border-white/10 p-2.5 text-slate-500 hover:border-rose-500/40 hover:text-rose-400"
+            aria-label="Clear image"
+          >
+            <Trash2 size={14} />
+          </button>
+        )}
+      </div>
+      <input ref={inputRef} type="file" accept="image/*" hidden onChange={(e) => pick(e.target.files?.[0])} />
+      {error && <span className="block text-xs text-rose-400">{error}</span>}
+      {value && broken && <span className="block text-xs text-amber-400">That URL did not load — check it or upload a file instead.</span>}
+    </div>
   );
 }
 

@@ -30,7 +30,11 @@ function PublicSite() {
   return (
     <>
       <Cursor />
-      <Nav name={data?.profile?.name?.split(' ').slice(-2).join(' ') || 'Faysal Joy'} />
+      <Nav
+        name={data?.profile?.name?.split(' ').slice(-2).join(' ') || 'Faysal Joy'}
+        logo={data?.settings?.logoUrl}
+        avatar={data?.profile?.avatarUrl}
+      />
       <ScrollToHash />
       <main>
         <AnimatePresence mode="wait">

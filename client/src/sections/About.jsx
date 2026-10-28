@@ -15,6 +15,25 @@ export default function About({ profile }) {
     <section id="about" className="section">
       <div className="container-x grid gap-14 lg:grid-cols-[1fr,1.05fr] lg:items-center">
         <Reveal from="right">
+          {profile?.avatarUrl && (
+            <div className="mb-7 flex items-center gap-4">
+              <div className="relative shrink-0">
+                <span aria-hidden className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-brand-500 to-neon-400 opacity-60 blur-md" />
+                <img
+                  src={profile.avatarUrl}
+                  alt={profile?.name || 'Portrait'}
+                  loading="lazy"
+                  className="relative h-20 w-20 rounded-2xl object-cover ring-1 ring-white/20 sm:h-24 sm:w-24"
+                  onError={(e) => { e.currentTarget.parentElement.style.display = 'none'; }}
+                />
+              </div>
+              <div>
+                <p className="text-base font-semibold text-white">{profile?.name}</p>
+                <p className="mt-0.5 text-sm text-slate-400">{profile?.headline}</p>
+                {profile?.location && <p className="mt-1 text-xs text-slate-500">{profile.location}</p>}
+              </div>
+            </div>
+          )}
           <span className="label-eyebrow">About</span>
           <h2 className="text-3xl leading-tight sm:text-4xl lg:text-5xl">
             I build the <span className="gradient-text">whole system</span> — interface, service and the device at the edge.

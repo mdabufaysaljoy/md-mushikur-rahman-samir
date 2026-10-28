@@ -137,6 +137,8 @@ const settingsSchema = new mongoose.Schema(
     key: { type: String, default: 'site', unique: true },
     siteTitle: String,
     tagline: String,
+    logoUrl: String,
+    faviconUrl: String,
     primaryColor: String,
     accentColor: String,
     heroMode: { type: String, default: 'particles' },

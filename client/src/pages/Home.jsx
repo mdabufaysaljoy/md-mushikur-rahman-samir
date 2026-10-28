@@ -34,7 +34,7 @@ export default function Home() {
 
   return (
     <>
-      <Hero profile={profile} settings={settings} techs={techs} />
+      <Hero profile={profile} settings={settings} skills={skills} techs={techs} />
       <About profile={profile} />
       <Skills skills={skills} />
       <Projects projects={projects} />

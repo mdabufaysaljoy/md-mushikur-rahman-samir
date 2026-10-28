@@ -9,7 +9,20 @@ export default function Footer({ profile, settings }) {
     <footer className="relative border-t border-white/5 py-14">
       <div className="container-x grid gap-10 md:grid-cols-[1.4fr,1fr,1fr]">
         <div>
-          <p className="text-lg font-semibold text-white">{profile?.name || 'Md Abu Faysal Joy'}</p>
+          <div className="flex items-center gap-3">
+            {(settings?.logoUrl || profile?.avatarUrl) && (
+              <img
+                src={settings?.logoUrl || profile?.avatarUrl}
+                alt=""
+                className="h-11 w-11 rounded-xl object-cover ring-1 ring-white/10"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
+            )}
+            <div>
+              <p className="text-lg font-semibold text-white">{profile?.name || 'Md Abu Faysal Joy'}</p>
+              {settings?.tagline && <p className="text-xs text-slate-500">{settings.tagline}</p>}
+            </div>
+          </div>
           <p className="mt-3 max-w-sm text-sm leading-relaxed text-slate-400">
             {settings?.footerNote || 'Full-stack engineering, from interface motion to infrastructure.'}
           </p>

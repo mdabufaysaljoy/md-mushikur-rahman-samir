@@ -13,7 +13,9 @@ const LINKS = [
   { label: 'Contact', hash: '#contact' },
 ];
 
-export default function Nav({ name = 'Faysal Joy' }) {
+export default function Nav({ name = 'Faysal Joy', logo, avatar }) {
+  const [markBroken, setMarkBroken] = useState(false);
+  const mark = !markBroken ? logo || avatar : null;
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
@@ -47,10 +49,17 @@ export default function Nav({ name = 'Faysal Joy' }) {
             }`}
           >
             <Link to="/" className="group flex items-center gap-3">
-              <span className="relative grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-neon-400 font-bold text-white">
-                F
-                <span className="absolute inset-0 rounded-xl bg-gradient-to-br from-brand-500 to-neon-400 opacity-60 blur-md transition group-hover:opacity-90" />
-              </span>
+              {mark ? (
+                <span className="relative grid h-9 w-9 place-items-center overflow-hidden rounded-xl ring-1 ring-white/15">
+                  <img src={mark} alt="" className="h-full w-full object-cover" onError={() => setMarkBroken(true)} />
+                  <span className="absolute inset-0 rounded-xl bg-gradient-to-br from-brand-500 to-neon-400 opacity-0 blur-md transition group-hover:opacity-60" />
+                </span>
+              ) : (
+                <span className="relative grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-neon-400 font-bold text-white">
+                  {(name || 'F').trim().charAt(0).toUpperCase()}
+                  <span className="absolute inset-0 rounded-xl bg-gradient-to-br from-brand-500 to-neon-400 opacity-60 blur-md transition group-hover:opacity-90" />
+                </span>
+              )}
               <span className="text-sm font-semibold tracking-wide text-slate-200">{name}</span>
             </Link>
 

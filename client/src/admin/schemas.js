@@ -26,7 +26,7 @@ export const projectFields = [
   ] },
   { name: 'liveUrl', label: 'Live URL' },
   { name: 'repoUrl', label: 'Repository URL' },
-  { name: 'coverImage', label: 'Cover image URL' },
+  { name: 'coverImage', label: 'Cover image', type: 'image', full: true },
   { name: 'order', label: 'Sort order', type: 'number' },
   { name: 'featured', label: 'Featured on home', type: 'boolean' },
   { name: 'published', label: 'Published', type: 'boolean' },
@@ -79,7 +79,7 @@ export const profileFields = [
   { name: 'email', label: 'Email' },
   { name: 'phone', label: 'Phone' },
   { name: 'resumeUrl', label: 'Résumé URL' },
-  { name: 'avatarUrl', label: 'Avatar URL' },
+  { name: 'avatarUrl', label: 'Profile picture', type: 'image', round: true, full: true, help: 'Shown in the hero orb, about section, navbar and footer.' },
   { name: 'roles', label: 'Rotating hero roles', type: 'list', full: true },
   { name: 'summary', label: 'Hero summary', type: 'textarea', full: true },
   { name: 'about', label: 'About text', type: 'textarea', rows: 6, full: true },
@@ -102,8 +102,10 @@ export const seoFields = [
 ];
 
 export const settingsFields = [
-  { name: 'siteTitle', label: 'Site title' },
+  { name: 'siteTitle', label: 'Site title', help: 'Used for the browser tab title.' },
   { name: 'tagline', label: 'Tagline' },
+  { name: 'logoUrl', label: 'Logo', type: 'image', full: true, help: 'Replaces the gradient monogram in the navbar and footer.' },
+  { name: 'faviconUrl', label: 'Favicon', type: 'image', full: true, help: 'Square PNG/SVG, 64×64 or larger.' },
   { name: 'primaryColor', label: 'Primary colour', type: 'color' },
   { name: 'accentColor', label: 'Accent colour', type: 'color' },
   { name: 'showServices', label: 'Show services section', type: 'boolean' },
