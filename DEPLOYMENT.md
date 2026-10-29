@@ -86,6 +86,15 @@ Two Render services from one blueprint. Each one's URL goes into the other's env
    # {"data":{"ok":true,"driver":"mongo","env":"production"}}
    ```
 
+### Already have the API deployed?
+
+If the API is a Render service you created by hand (it is API-only as soon as `client/dist` is absent, which
+it is when the build command is just `npm install`), skip the blueprint and add only the front end:
+**New → Static Site** → same repo → build `npm install && npm run build` → publish `client/dist` → env
+`VITE_API_URL` = the API's origin → add a rewrite `/*  →  /index.html` (*Redirects/Rewrites* tab, action
+**Rewrite**). Then set `CLIENT_ORIGIN` on the API service to the static site's origin and let it redeploy.
+Check the API's `NODE_ENV` is `production` while you are in there — `/api/health` reports it.
+
 ### Hosting the front end somewhere else
 
 The static site is a plain Vite build, so any static host works. In every case set **`VITE_API_URL`** to the
