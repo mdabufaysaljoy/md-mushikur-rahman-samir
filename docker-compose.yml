@@ -19,7 +19,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@faysaljoy.dev}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin@12345}
-      CLIENT_ORIGIN: ${CLIENT_ORIGIN:-https://md-mushikur-rahman-samir.onrender.com}
+      CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://localhost:5050}
     ports:
       - '5050:5050'
     volumes:

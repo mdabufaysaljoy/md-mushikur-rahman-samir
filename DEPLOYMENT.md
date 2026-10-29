@@ -178,7 +178,7 @@ curl https://<your-service>.onrender.com/api/health
 Single-service, exactly as Option B runs it:
 
 ```bash
-docker compose up -d --build     # app + MongoDB on https://md-mushikur-rahman-samir.onrender.com
+docker compose up -d --build     # app + MongoDB on http://localhost:5050
 ```
 
 Split, exactly as Option A runs it — API only on 5050, SPA preview on 4173:
