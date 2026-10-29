@@ -19,6 +19,8 @@ export const config = {
     .split(',')
     .map((o) => o.trim())
     .filter(Boolean),
+  // API-only deploy (front end hosted elsewhere): set SERVE_CLIENT=false.
+  serveClient: (process.env.SERVE_CLIENT || 'true') !== 'false',
   dataDir: path.resolve(__dirname, '../data'),
   uploadsDir: path.resolve(__dirname, '../uploads'),
 };

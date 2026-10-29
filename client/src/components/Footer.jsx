@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Github, Linkedin, Mail, Globe, Facebook, Lock } from 'lucide-react';
+import { assetUrl } from '../lib/api.js';
 
 const ICONS = { github: Github, linkedin: Linkedin, mail: Mail, globe: Globe, facebook: Facebook };
 
@@ -12,7 +13,7 @@ export default function Footer({ profile, settings }) {
           <div className="flex items-center gap-3">
             {(settings?.logoUrl || profile?.avatarUrl) && (
               <img
-                src={settings?.logoUrl || profile?.avatarUrl}
+                src={assetUrl(settings?.logoUrl || profile?.avatarUrl)}
                 alt=""
                 className="h-11 w-11 rounded-xl object-cover ring-1 ring-white/10"
                 onError={(e) => { e.currentTarget.style.display = 'none'; }}

@@ -18,7 +18,8 @@ const app = express();
 app.set('trust proxy', 1);
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(compression());
-app.use(cors({ origin: config.clientOrigins.length ? config.clientOrigins : true, credentials: true }));
+const allowAnyOrigin = !config.clientOrigins.length || config.clientOrigins.includes('*');
+app.use(cors({ origin: allowAnyOrigin ? true : config.clientOrigins, credentials: true }));
 app.use(express.json({ limit: '1mb' }));
 if (config.env !== 'test') app.use(morgan('dev'));
 
@@ -26,11 +27,19 @@ app.get('/api/health', (_req, res) => res.json({ data: { ok: true, driver: state
 app.use('/api/v1', router);
 app.use('/uploads', express.static(config.uploadsDir, { maxAge: '7d' }));
 
-// Serve the built SPA in production (single-service deploy).
+// Serve the built SPA in production (single-service deploy). When the front end is
+// hosted separately, SERVE_CLIENT=false keeps this an API-only service.
 const clientDist = path.resolve(__dirname, '../../client/dist');
-if (fs.existsSync(clientDist)) {
+if (config.serveClient && fs.existsSync(clientDist)) {
   app.use(express.static(clientDist, { maxAge: '1h' }));
   app.get(/^(?!\/api|\/uploads).*/, (_req, res) => res.sendFile(path.join(clientDist, 'index.html')));
+}
+
+// API-only mode: a plain root response beats a 404 for uptime checks and curl.
+if (!(config.serveClient && fs.existsSync(clientDist))) {
+  app.get('/', (_req, res) =>
+    res.json({ data: { name: 'faysal-portfolio-api', health: '/api/health', api: '/api/v1' } }),
+  );
 }
 
 app.use(notFound);

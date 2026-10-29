@@ -1,0 +1,33 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+# Deploys the portfolio as one Docker web service. MongoDB lives on Atlas (free M0).
+services:
+  - type: web
+    name: faysal-portfolio
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: singapore
+    branch: main
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5050
+      # Set in the Render dashboard: the Atlas SRV connection string.
+      - key: MONGODB_URI
+        sync: false
+      # Set in the dashboard: the first admin login. Change the password after signing in.
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      # Generated once by Render and kept across deploys.
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      # Same-origin in production; add extra origins comma-separated if you split the front end.
+      - key: CLIENT_ORIGIN
+        sync: false

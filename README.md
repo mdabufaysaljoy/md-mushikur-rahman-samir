@@ -75,8 +75,14 @@ argon-grade bcrypt hashing (cost 12), server-side validation on every write, ima
 
 ## Deploy
 
-**Render + MongoDB Atlas (free):** step-by-step in [DEPLOYMENT.md](DEPLOYMENT.md). The repo ships a
-`render.yaml` blueprint and a multi-stage `Dockerfile`; push to `main` redeploys.
+**Render + MongoDB Atlas (free):** step-by-step in [DEPLOYMENT.md](DEPLOYMENT.md), which covers both shapes —
+front end and API as **two separate services, no Docker** (`render.yaml`, the default) or **one Docker service**
+(`render.docker.yaml` + the multi-stage `Dockerfile`). Push to `main` redeploys.
+
+Splitting them needs exactly two env vars: `VITE_API_URL` on the front end (the API's origin, baked in at build
+time — see `client/.env.example`) and `CLIENT_ORIGIN` on the API (the site's origin, for CORS), plus
+`SERVE_CLIENT=false` so the API stops serving the SPA. Leave `VITE_API_URL` blank and the client calls its own
+origin, which is what local dev and the single-service deploy want.
 
 **Locally or on a VPS:**
 

@@ -1,7 +1,10 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { getSite } from './api.js';
+import { getSite, assetUrl } from './api.js';
 
-const absolute = (url) => (url?.startsWith('/') ? `${window.location.origin}${url}` : url);
+const absolute = (url) => {
+  const resolved = assetUrl(url);
+  return resolved?.startsWith('/') ? `${window.location.origin}${resolved}` : resolved;
+};
 
 function setMeta(attr, key, content) {
   if (!content) return;
@@ -59,7 +62,7 @@ export function SiteProvider({ children }) {
     setMeta('property', 'og:description', seo?.description || s.tagline || '');
     const ogImage = state.data?.profile?.avatarUrl || s.logoUrl;
     if (ogImage) setMeta('property', 'og:image', absolute(ogImage));
-    if (s.faviconUrl) setFavicon(s.faviconUrl);
+    if (s.faviconUrl) setFavicon(assetUrl(s.faviconUrl));
   }, [state.data]);
 
   return <SiteContext.Provider value={{ ...state, refresh }}>{children}</SiteContext.Provider>;

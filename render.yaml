@@ -1,21 +1,33 @@
 # Render Blueprint — https://render.com/docs/blueprint-spec
-# Deploys the portfolio as one Docker web service. MongoDB lives on Atlas (free M0).
+#
+# Front end and back end as TWO separate services, no Docker:
+#   • faysal-portfolio-api — Node web service (Express + Mongoose), API only
+#   • faysal-portfolio-web — static site (the built Vite SPA) on Render's CDN
+# MongoDB lives on Atlas (free M0).
+#
+# The two URL env vars are cross-references, so they are filled in after the first
+# deploy (see DEPLOYMENT.md § "Option B"): the API needs the site's origin for CORS,
+# and the site needs the API's origin baked in at build time.
+#
+# Prefer one service that serves both? Use render.docker.yaml instead.
 services:
   - type: web
-    name: faysal-portfolio
-    runtime: docker
-    dockerfilePath: ./Dockerfile
+    name: faysal-portfolio-api
+    runtime: node
     plan: free
     region: singapore
     branch: main
+    buildCommand: npm install
+    startCommand: npm run start
     healthCheckPath: /api/health
     autoDeploy: true
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 5050
-      # Set in the Render dashboard: the Atlas SRV connection string.
+      # API only — the SPA is the static site below.
+      - key: SERVE_CLIENT
+        value: 'false'
+      # Set in the dashboard: the Atlas SRV connection string.
       - key: MONGODB_URI
         sync: false
       # Set in the dashboard: the first admin login. Change the password after signing in.
@@ -28,6 +40,29 @@ services:
         generateValue: true
       - key: JWT_EXPIRES_IN
         value: 7d
-      # Same-origin in production; add extra origins comma-separated if you split the front end.
+      # The static site's origin, WITH scheme, e.g. https://faysal-portfolio-web.onrender.com
+      # Comma-separate to allow several (custom domain, preview URL).
       - key: CLIENT_ORIGIN
         sync: false
+
+  - type: web
+    name: faysal-portfolio-web
+    runtime: static
+    branch: main
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./client/dist
+    autoDeploy: true
+    envVars:
+      # The API service's origin, WITH scheme and no trailing slash,
+      # e.g. https://faysal-portfolio-api.onrender.com
+      - key: VITE_API_URL
+        sync: false
+    routes:
+      # Client-side routing: every unknown path serves the SPA shell.
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable

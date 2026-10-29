@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowDown, Download, Sparkles, MapPin, MousePointerClick } from 'lucide-react';
 import Magnetic from '../components/Magnetic.jsx';
 import Marquee from '../components/Marquee.jsx';
+import { assetUrl } from '../lib/api.js';
 
 const HeroScene = lazy(() => import('../three/HeroScene.jsx'));
 
@@ -188,7 +189,7 @@ export default function Hero({ profile, settings, skills = [], techs = [] }) {
               }
             >
               <HeroScene
-                avatar={profile?.avatarUrl}
+                avatar={assetUrl(profile?.avatarUrl)}
                 brand={brand}
                 accent={accent}
                 nodes={nodes}

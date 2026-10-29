@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { SiteProvider, useSite } from './lib/useSite.jsx';
+import { assetUrl } from './lib/api.js';
 import Nav from './components/Nav.jsx';
 import Footer from './components/Footer.jsx';
 import Cursor from './components/Cursor.jsx';
@@ -32,8 +33,8 @@ function PublicSite() {
       <Cursor />
       <Nav
         name={data?.profile?.name?.split(' ').slice(-2).join(' ') || 'Faysal Joy'}
-        logo={data?.settings?.logoUrl}
-        avatar={data?.profile?.avatarUrl}
+        logo={assetUrl(data?.settings?.logoUrl)}
+        avatar={assetUrl(data?.profile?.avatarUrl)}
       />
       <ScrollToHash />
       <main>

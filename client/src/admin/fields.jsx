@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Plus, Trash2, GripVertical, Upload, ImageOff } from 'lucide-react';
-import { api } from '../lib/api.js';
+import { api, assetUrl } from '../lib/api.js';
 
 const base = 'w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-brand-500/70 focus:ring-2 focus:ring-brand-500/20 placeholder:text-slate-600';
 
@@ -94,7 +94,7 @@ function ImageField({ value, onChange, placeholder, round }) {
           }`}
         >
           {value && !broken ? (
-            <img src={value} alt="" className="h-full w-full object-cover" onError={() => setBroken(true)} onLoad={() => setBroken(false)} />
+            <img src={assetUrl(value)} alt="" className="h-full w-full object-cover" onError={() => setBroken(true)} onLoad={() => setBroken(false)} />
           ) : (
             <ImageOff size={16} className="text-slate-600" />
           )}

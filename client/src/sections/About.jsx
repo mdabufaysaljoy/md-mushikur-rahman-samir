@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Code2, Cpu, Cloud, ShieldCheck } from 'lucide-react';
 import Reveal from '../components/Reveal.jsx';
 import TiltCard from '../components/TiltCard.jsx';
+import { assetUrl } from '../lib/api.js';
 
 const PILLARS = [
   { icon: Code2, title: 'Product-grade front end', text: 'Design systems, motion choreography and 3D scenes that stay fast and accessible.' },
@@ -20,7 +21,7 @@ export default function About({ profile }) {
               <div className="relative shrink-0">
                 <span aria-hidden className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-brand-500 to-neon-400 opacity-60 blur-md" />
                 <img
-                  src={profile.avatarUrl}
+                  src={assetUrl(profile.avatarUrl)}
                   alt={profile?.name || 'Portrait'}
                   loading="lazy"
                   className="relative h-20 w-20 rounded-2xl object-cover ring-1 ring-white/20 sm:h-24 sm:w-24"
