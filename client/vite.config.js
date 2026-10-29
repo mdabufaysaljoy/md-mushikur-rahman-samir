@@ -6,8 +6,8 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/api': { target: 'http://localhost:5050', changeOrigin: true },
-      '/uploads': { target: 'http://localhost:5050', changeOrigin: true },
+      '/api': { target: 'https://md-mushikur-rahman-samir.onrender.com', changeOrigin: true },
+      '/uploads': { target: 'https://md-mushikur-rahman-samir.onrender.com', changeOrigin: true },
     },
   },
   build: { outDir: 'dist', chunkSizeWarningLimit: 1200 },
