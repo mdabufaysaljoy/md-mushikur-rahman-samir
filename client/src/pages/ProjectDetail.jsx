@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ExternalLink, Github, Layers3, Target, Lightbulb, CheckCircle2 } from 'lucide-react';
 import { useSite } from '../lib/useSite.jsx';
+import { usePageTitle } from '../lib/pageTitle.js';
 import Loader from '../components/Loader.jsx';
 import Reveal from '../components/Reveal.jsx';
 
@@ -12,10 +13,11 @@ export default function ProjectDetail() {
   const project = (data?.projects || []).find((p) => p.slug === slug);
   const others = (data?.projects || []).filter((p) => p.slug !== slug).slice(0, 3);
 
+  usePageTitle(project?.title);
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
-    if (project) document.title = `${project.title} — Md Abu Faysal Joy`;
-  }, [slug, project]);
+  }, [slug]);
 
   if (loading) return <Loader label="Opening case study" />;
   if (!project) {

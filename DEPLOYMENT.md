@@ -103,12 +103,41 @@ API origin, and add that host's URL to the API's **`CLIENT_ORIGIN`** (comma-sepa
 | Host | Build command | Publish dir | Notes |
 |---|---|---|---|
 | Netlify | `npm install && npm run build` | `client/dist` | add a `/*  →  /index.html  200` rewrite |
-| Vercel | `npm install && npm run build` | `client/dist` | framework preset **Vite**; rewrites are automatic |
+| Render | `npm install && npm run build` | `client/dist` | rewrite `/*  →  /index.html` (see `render.yaml`) |
+| Vercel | `npm install && npm run build` | `client/dist` | `vercel.json` at the repo root does this — set **Root Directory** to the repo root, not `client` |
 | Cloudflare Pages | `npm install && npm run build` | `client/dist` | SPA fallback is on by default |
 
 The API can go on any Node host too (Railway, Fly, a VPS). It needs `MONGODB_URI`, `JWT_SECRET`,
 `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `CLIENT_ORIGIN`, `SERVE_CLIENT=false`, and `npm run start` from the repo
 root. On a VPS, run it behind Nginx with `proxy_pass` to `127.0.0.1:5050` and let Certbot handle TLS.
+
+### Link previews (WhatsApp, Facebook, X, Slack)
+
+Crawlers read the HTML as served and never run the app, so meta set by React at runtime never reaches a
+preview. The build bakes the admin panel's **SEO** section into the HTML instead: `client/vite-plugin-seo.js`
+reads `/api/v1/site` during `npm run build` and writes the title, description, keywords, Open Graph and
+Twitter tags, the favicon and `Person` JSON-LD into `index.html` — plus one pre-rendered shell per project
+(`dist/projects/<slug>/index.html`), so a shared project link previews that project's title, tagline and
+cover image.
+
+It needs two env vars on the front end:
+
+| Variable | Why |
+|---|---|
+| `VITE_API_URL` | where to read the SEO section from (already set for the app itself) |
+| `VITE_SITE_URL` | the site's own origin, for `og:url` and `canonical` — on Vercel it falls back to `VERCEL_PROJECT_PRODUCTION_URL` automatically |
+
+If the API is unreachable at build time the build still succeeds and ships the stock meta, with a warning in
+the log — a link preview is not worth a failed deploy. Set `SEO_API_URL` to read the meta from a different
+API than the one the app calls.
+
+**Previews refresh on redeploy, not on save.** Editing SEO in the admin panel updates the live site instantly
+(React applies it) but the preview only changes after the front end rebuilds. Redeploy from the host's
+dashboard, or wire the host's deploy hook to fire when you publish.
+
+Test a preview without spamming your own chats:
+<https://developers.facebook.com/tools/debug/> (WhatsApp uses the same scraper, *Scrape Again* clears its
+cache) and <https://cards-dev.twitter.com/validator>.
 
 ### Two things to get right
 

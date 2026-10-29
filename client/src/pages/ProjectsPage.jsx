@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useSite } from '../lib/useSite.jsx';
+import { usePageTitle } from '../lib/pageTitle.js';
 import Loader from '../components/Loader.jsx';
 import Reveal from '../components/Reveal.jsx';
 import { ProjectCard } from '../sections/Projects.jsx';
@@ -7,6 +8,7 @@ import { ProjectCard } from '../sections/Projects.jsx';
 export default function ProjectsPage() {
   const { data, loading } = useSite();
   const [query, setQuery] = useState('');
+  usePageTitle('Projects');
   const projects = data?.projects || [];
 
   const list = useMemo(() => {

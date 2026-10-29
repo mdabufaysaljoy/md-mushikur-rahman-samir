@@ -79,6 +79,11 @@ argon-grade bcrypt hashing (cost 12), server-side validation on every write, ima
 front end and API as **two separate services, no Docker** (`render.yaml`, the default) or **one Docker service**
 (`render.docker.yaml` + the multi-stage `Dockerfile`). Push to `main` redeploys.
 
+Link previews are handled at build time: `client/vite-plugin-seo.js` reads the admin panel's SEO section from
+the API and bakes the title, description, Open Graph/Twitter tags and JSON-LD into `index.html`, plus one
+pre-rendered shell per project so shared project links preview correctly. Crawlers never run JavaScript, so
+runtime meta alone is invisible to them.
+
 Splitting them needs exactly two env vars: `VITE_API_URL` on the front end (the API's origin, baked in at build
 time — see `client/.env.example`) and `CLIENT_ORIGIN` on the API (the site's origin, for CORS), plus
 `SERVE_CLIENT=false` so the API stops serving the SPA. Leave `VITE_API_URL` blank and the client calls its own

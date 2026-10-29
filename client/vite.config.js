@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import seo from './vite-plugin-seo.js';
 
 /**
  * Dev-only proxy target. The client calls /api and /uploads on its own origin in
@@ -11,7 +12,7 @@ import react from '@vitejs/plugin-react';
 const proxyTarget = process.env.DEV_API_PROXY || 'http://localhost:5050';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), seo()],
   server: {
     port: 5173,
     proxy: {

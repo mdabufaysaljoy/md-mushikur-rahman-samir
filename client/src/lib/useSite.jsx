@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { getSite, assetUrl } from './api.js';
+import { setSiteTitle } from './pageTitle.js';
 
 const absolute = (url) => {
   const resolved = assetUrl(url);
@@ -55,7 +56,7 @@ export function SiteProvider({ children }) {
 
     const seo = state.data?.profile?.seo;
     const title = s.siteTitle || seo?.title;
-    if (title) document.title = title;
+    if (title) setSiteTitle(title);
     if (seo?.description) setMeta('name', 'description', seo.description);
     if (seo?.keywords) setMeta('name', 'keywords', seo.keywords);
     setMeta('property', 'og:title', title || '');
