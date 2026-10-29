@@ -95,5 +95,5 @@ curl https://<your-service>.onrender.com/api/health
 ## Local production check
 
 ```bash
-docker compose up -d --build     # app + MongoDB on http://localhost:5050
+docker compose up -d --build     # app + MongoDB on https://md-mushikur-rahman-samir.onrender.com
 ```

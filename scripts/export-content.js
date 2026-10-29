@@ -4,7 +4,7 @@
  * services, testimonials) to a single Markdown file — handy for a CV, a proposal
  * or a README. Re-run it after editing anything in the admin panel.
  *
- *   node scripts/export-content.js [--api http://localhost:5050] [--out PORTFOLIO-CONTENT.md]
+ *   node scripts/export-content.js [--api https://md-mushikur-rahman-samir.onrender.com] [--out PORTFOLIO-CONTENT.md]
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -15,7 +15,7 @@ const flag = (name, fallback) => {
   return i !== -1 && args[i + 1] ? args[i + 1] : fallback;
 };
 
-const API = flag('api', process.env.API_URL || 'http://localhost:5050').replace(/\/$/, '');
+const API = flag('api', process.env.API_URL || 'https://md-mushikur-rahman-samir.onrender.com').replace(/\/$/, '');
 const OUT = path.resolve(process.cwd(), flag('out', 'PORTFOLIO-CONTENT.md'));
 
 const bullets = (items = []) => items.map((i) => `- ${i}`).join('\n');
